@@ -66,33 +66,8 @@ public class Program
         }
     }
 
-    public static void Main()
+    public static void PartOne(List<Board> boards, string[] chosenNumbers)
     {
-        var inputs = File.ReadAllLines("input.txt").ToList();
-
-        var chosenNumbers = inputs.ElementAt(0).Split(",");
-
-        // after collecting the chosen numbers we can safely remove the first line
-        inputs.RemoveAt(0);
-
-        List<Board> boards = new();
-        List<string> numbers = new();
-        foreach (var line in inputs)
-        {
-            // the input file has an empty line as the board separator
-            if (String.IsNullOrEmpty(line))
-            {
-                if (numbers.Count() > 0)
-                {
-                    boards.Add(new Board(numbers, 5, 5));
-                    numbers.Clear();
-                }
-                continue;
-            }
-            var xs = line.Split(" ", StringSplitOptions.RemoveEmptyEntries).ToList();
-            numbers.AddRange(xs);
-        }
-
         // this code works as well, but I think I'm traversing the list to many times unnecessary. I
         // need to benchmark it to see if the diff in performance is relevant. 
         // we are getting the chunk of 6 because we want to get the empty line separator as well
@@ -121,5 +96,59 @@ public class Program
                 }
             }
         }
+    }
+
+    public static void PartTwo(List<Board> boards, string[] chosenNumbers)
+    {
+        HashSet<Tuple<int, int>> winnerBoards = new();
+        for (var index = 0; index < chosenNumbers.Count(); index++)
+        {
+            for (var board = 0; board < boards.Count(); board++)
+            {
+                // if the board is in the winnerBoards just skip that board since we don't need to mark it anymore 
+                if (!winnerBoards.Any(x => x.Item1 == board))
+                {
+                    var number = Int32.Parse(chosenNumbers[index]);
+                    var won = boards[board].MarkNumber(number);
+                    if (won)
+                    {
+                        winnerBoards.Add(new Tuple<int, int>(board, number));
+                    }
+                }
+            }
+        }
+        var value = winnerBoards.Last();
+        var lastBoard = boards[value.Item1];
+        Console.WriteLine(lastBoard.FinalScore(value.Item2));
+    }
+
+    public static void Main()
+    {
+        var inputs = File.ReadAllLines("input.txt").ToList();
+
+        var chosenNumbers = inputs.ElementAt(0).Split(",");
+
+        // after collecting the chosen numbers we can safely remove the first line
+        inputs.RemoveAt(0);
+
+        List<Board> boards = new();
+        List<string> numbers = new();
+        foreach (var line in inputs)
+        {
+            // the input file has an empty line as the board separator
+            if (String.IsNullOrEmpty(line))
+            {
+                if (numbers.Count() > 0)
+                {
+                    boards.Add(new Board(numbers, 5, 5));
+                    numbers.Clear();
+                }
+                continue;
+            }
+            var xs = line.Split(" ", StringSplitOptions.RemoveEmptyEntries).ToList();
+            numbers.AddRange(xs);
+        }
+        PartOne(boards, chosenNumbers);
+        PartTwo(boards, chosenNumbers);
     }
 }
